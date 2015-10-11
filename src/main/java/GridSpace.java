@@ -13,6 +13,7 @@ public class GridSpace {
 		this.row = row;
 		this.col = col;
 		this.value = value;
+		this.bOccupied = false;
 	}
 	
 	public int getRow() {
@@ -23,7 +24,7 @@ public class GridSpace {
 		return col;
 	}
 
-	public boolean isbOccupied() {
+	public boolean isOccupied() {
 		return bOccupied;
 	}
 

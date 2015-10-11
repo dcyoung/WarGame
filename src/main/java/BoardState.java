@@ -44,8 +44,8 @@ public class BoardState {
 	public void postInitializeGrid(){
 		//for each grid space, populate it's neighboring spaces array
 		for(ArrayList<GridSpace> row : this.grid){
-			for(GridSpace col : row){
-				col.setNeighboringGridSpaces(this.determineGridSpaceNeighbors(col));
+			for(GridSpace gs : row){
+				gs.setNeighboringGridSpaces(this.determineGridSpaceNeighbors(gs));
 			}
 		}
 	}
@@ -67,8 +67,8 @@ public class BoardState {
 	
 	public void printGridVals(){
 		for(ArrayList<GridSpace> row : this.grid){
-			for(GridSpace col : row){
-				System.out.print(col.getValue() + "\t");
+			for(GridSpace gs : row){
+				System.out.print(gs.getValue() + "\t");
 				//System.out.print(col.getValue() + "," + col.getNeighboringGridSpaces().size()+ "\t");
 			}
 			System.out.println("\n");
@@ -128,6 +128,56 @@ public class BoardState {
 		return gridCopy;
 	}
 
+	public boolean isGridFilled() {
+		for(ArrayList<GridSpace> row : this.grid){
+			for(GridSpace gs : row){
+				if(!gs.isOccupied()){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	public ArrayList<Move> getAllowableMoves(String playerID, GameStateNode n) {
+		ArrayList<Move> allowableMoves = new ArrayList<Move>();
+		GameStateNode stateNodeClone;
+		GridSpace gridSpaceClone;
+		
+		//check every grid space to see if the player can move into it
+		for(int row = 0; row < this.numGridRows; row ++){
+			for(int col = 0; col < this.numGridCols; col ++){
+				GridSpace gs = this.grid.get(row).get(col);
+				//if the grid space is unoccupied
+				if(!gs.isOccupied()){
+					//clone the game state so we don't mess with the current one
+					stateNodeClone = n.deepCopyGameStateNode();
+					gridSpaceClone = stateNodeClone.getBoardState().getGrid().get(row).get(col);
+					
+					//add a new move of type CommandoParaDrop
+					allowableMoves.add(new CommandoParaDrop(playerID, gridSpaceClone, stateNodeClone));
+					
+					//Check if a blitz is allowed
+					//if the grid space has a neighbor that belongs to the moving player
+					for(GridSpace neighbor : gs.getNeighboringGridSpaces()){
+						if(neighbor.isOccupied()){
+							if(neighbor.getResidentPlayerID().equals(playerID)){
+								//clone the game state so we don't mess with the current one
+								stateNodeClone = n.deepCopyGameStateNode();
+								gridSpaceClone = stateNodeClone.getBoardState().getGrid().get(row).get(col);
+								//add a new move of type M1DeathBlitz
+								allowableMoves.add(new M1DeathBlitz(playerID, gridSpaceClone, stateNodeClone));
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return allowableMoves;
+	}
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");

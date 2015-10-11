@@ -27,18 +27,18 @@ public class GameStateNode {
 			return player2.getPlayerID();
 	}
 	
-	public ArrayList<GameStateNode> getAllowableMoves(){
-		return null;
+	public ArrayList<Move> getAllowableMoves(Player player){
+		return this.boardState.getAllowableMoves(player.getPlayerID(), this);
 	}
 	
 	
 	/**
-	 * In WarGame, the game ends when all the squares are occupied by all 
-	 * players since no more moves are left.
+	 * In WarGame, the game ends when all the squares are occupied 
+	 * by players since no more moves are left.
 	 * @return true is the game is over
 	 */  
 	public boolean isLeafNode(){
-		return false;
+		return this.boardState.isGridFilled();
 	}
 	
 	public GameStateNode getParent() {
@@ -70,6 +70,23 @@ public class GameStateNode {
 		this.boardState = boardState;
 	}
 
+	public Player getPlayer1() {
+		return player1;
+	}
+
+	public Player getPlayer2() {
+		return player2;
+	}
+	
+	public Player getPlayerByID(String playerID){
+		if(this.player1.getPlayerID().equals(playerID)){
+			return this.player1;
+		}
+		else if(this.player2.getPlayerID().equals(playerID)){
+			return this.player2;
+		}
+		return null;
+	}
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

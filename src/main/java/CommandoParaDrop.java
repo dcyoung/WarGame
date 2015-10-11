@@ -2,16 +2,18 @@
 public class CommandoParaDrop extends Move {
 	
 	
-	public CommandoParaDrop(Player movingPlayer, GridSpace gridSpace, GameStateNode gameStateNode){
-		super("CommandoParaDrop",movingPlayer, gridSpace, gameStateNode);
+	public CommandoParaDrop(String movingPlayerID, GridSpace gridSpace, GameStateNode gameStateNode){
+		super("CommandoParaDrop", movingPlayerID, gridSpace, gameStateNode);
 	}
 	
-	public boolean makeMove(){
-		if(!isAllowable(this.gameStateNode)){
-			return false;
-		}
-		//FIXME: finish
-		return true;
+	public void makeMove(){
+		//modify the grid space
+		this.gridSpace.setResidentPlayerID(this.movingPlayer.getPlayerID());
+		this.gridSpace.setbOccupied(true);
+		
+		//adjust the player's score
+		int updatedPlayerScore = this.movingPlayer.getCurrentScore() + this.gridSpace.getValue();
+		this.movingPlayer.setCurrentScore(updatedPlayerScore);
 	}
 	
 	

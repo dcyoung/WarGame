@@ -6,11 +6,11 @@ public class Move {
 	protected GridSpace gridSpace;
 	protected GameStateNode gameStateNode;
 	
-	public Move(String moveType, Player movingPlayerID, GridSpace gridSpace, GameStateNode gameStateNode){
+	public Move(String moveType, String movingPlayerID, GridSpace gridSpace, GameStateNode gameStateNode){
 		this.type = moveType;
-		this.movingPlayer = movingPlayer;
-		this.gridSpace = gridSpace;
 		this.gameStateNode = gameStateNode;
+		this.movingPlayer = gameStateNode.getPlayerByID(movingPlayerID);
+		this.gridSpace = gridSpace;
 	}
 	
 	/**
@@ -19,7 +19,7 @@ public class Move {
 	 * @return true if the space the player is moving into is unoccupied
 	 */
 	public boolean isAllowable(GameStateNode n){
-		return !gridSpace.isbOccupied();
+		return !gridSpace.isOccupied();
 	}
 	
 	public Player getMovingPlayer() {
