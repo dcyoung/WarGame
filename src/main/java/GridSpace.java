@@ -1,21 +1,19 @@
 import java.util.ArrayList;
 
-public class GridNode {
+public class GridSpace {
 
 	public int row;
 	public int col;
 	public int value;
 	private boolean bOccupied;
 	private String residentPlayerID;
-	private ArrayList<GridNode> neighborNodes;
+	private ArrayList<GridSpace> neighboringGridSpaces;
 	
-	public GridNode(int row, int col, int value){
+	public GridSpace(int row, int col, int value){
 		this.row = row;
 		this.col = col;
 		this.value = value;
 	}
-	
-	
 	
 	public int getRow() {
 		return row;
@@ -49,17 +47,24 @@ public class GridNode {
 		this.value = value;
 	}
 
-	public ArrayList<GridNode> getNeighborNodes() {
-		return neighborNodes;
+	public ArrayList<GridSpace> getNeighboringGridSpaces() {
+		return neighboringGridSpaces;
 	}
 
-	public void setNeighborNodes(ArrayList<GridNode> neighborNodes) {
-		this.neighborNodes = neighborNodes;
+	public void setNeighboringGridSpaces(ArrayList<GridSpace> neighborSpaces) {
+		this.neighboringGridSpaces = neighborSpaces;
 	}
 
+	public GridSpace deepCopyGridSpace(){
+		GridSpace gs = new GridSpace(this.row, this.col, this.value);
+		gs.setbOccupied(this.bOccupied);
+		gs.setResidentPlayerID(this.residentPlayerID);
+		return gs;
+	}
+	
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
 	}
 
 }
