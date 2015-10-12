@@ -1,3 +1,9 @@
+/**
+ * GameBoardFileReader:
+ * 		Reads a file containing initial game board values.
+ * 
+ * @author dcyoung3
+ */
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;

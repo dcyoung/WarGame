@@ -1,3 +1,9 @@
+/**
+ * GridSpace:
+ * 		Defines a grid space on the game board in wargame,
+ * 		along with all of its associated information.
+ * @author dcyoung3
+ */
 import java.util.ArrayList;
 
 public class GridSpace {
@@ -9,6 +15,12 @@ public class GridSpace {
 	private String residentPlayerID;
 	private ArrayList<GridSpace> neighboringGridSpaces;
 	
+	/**
+	 * Constructor
+	 * @param row
+	 * @param col
+	 * @param value
+	 */
 	public GridSpace(int row, int col, int value){
 		this.row = row;
 		this.col = col;
@@ -55,7 +67,11 @@ public class GridSpace {
 	public void setNeighboringGridSpaces(ArrayList<GridSpace> neighborSpaces) {
 		this.neighboringGridSpaces = neighborSpaces;
 	}
-
+	
+	/**
+	 * 
+	 * @return clone of this grid space
+	 */
 	public GridSpace deepCopyGridSpace(){
 		GridSpace gs = new GridSpace(this.row, this.col, this.value);
 		gs.setbOccupied(this.bOccupied);

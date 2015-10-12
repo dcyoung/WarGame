@@ -1,4 +1,10 @@
-
+/**
+ * Move:
+ * Abstract Move object to be extended by CommandoParaDrop and DeathBlitz subclasses.
+ * 
+ * @author dcyoung
+ *
+ */
 public class Move {
 	
 	protected Player movingPlayer;

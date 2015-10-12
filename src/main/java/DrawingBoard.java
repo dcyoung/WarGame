@@ -1,3 +1,11 @@
+/**
+ * DrawingBoard:
+ * 		Drawing board to draw the state of the war game dynamically.
+ * 		Makes use of StdDraw.java, a basic 2D graphics library 
+ * 		sourced from Princeton.
+ * 	
+ * @author dcyoung3
+ */
 import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
@@ -12,7 +20,13 @@ public class DrawingBoard {
 	private GameStateNode state;
 	private String bluePlayerID;
 	private String greenPlayerID;
+	private Font valueFont;
+	private Font scoreFont;
 	
+	/**
+	 * constructor
+	 * @param state
+	 */
 	DrawingBoard(GameStateNode state){
 		this.state = state;
 		this.numRows = state.getBoardState().getNumGridRows();
@@ -22,22 +36,23 @@ public class DrawingBoard {
 		createCanvas();
 		
 		int style = Font.BOLD | Font.ITALIC;
-		Font font = new Font ("Garamond", style , 36);
-		//Font font = new Font ("Arial", style , 36);
-		StdDraw.setFont(font);
+		this.valueFont = new Font ("Garamond", style , 36);
+		this.scoreFont = new Font ("Arial", style , 24);
+		
+		this.drawInitialState();
 	}
 	
 	public void setGameStateNode(GameStateNode n){
 		this.state = n;
 	}
 	
-	public void drawInitialState(){
+	private void drawInitialState(){
 		drawBlankGrid();
 		drawGridAllGridValues();
 		StdDraw.show(5);
 	}
 	
-	public void createCanvas(){
+	private void createCanvas(){
 		int canvasScale = 200;
 		int maxCanvasSize = 900;
 		while(this.numCols*canvasScale > maxCanvasSize || this.numRows*canvasScale > maxCanvasSize){
@@ -52,13 +67,13 @@ public class DrawingBoard {
         StdDraw.setYscale(0, this.numRows);
 	}
 	
-	public void drawBlankGridSpace(int row, int col){
+	private void drawBlankGridSpace(int row, int col){
 		StdDraw.setPenRadius();
 		StdDraw.setPenColor(StdDraw.GRAY);
 		StdDraw.filledSquare(col+0.5, (this.numRows-1-row)+0.5, .45 );
 	}
 	
-	public void drawBlankGrid(){
+	private void drawBlankGrid(){
 		for(int row = 0; row < this.numRows; row++){
 			for(int col = 0; col < this.numCols; col++){
 				this.drawBlankGridSpace(row, col);
@@ -67,6 +82,7 @@ public class DrawingBoard {
 	}
 	
 	private void drawSingleGridSpaceValue(int row, int col) {
+		StdDraw.setFont(this.valueFont);
 		StdDraw.setPenColor(StdDraw.WHITE);
 		int value = this.state.getBoardState().getGrid().get(row).get(col).getValue();
 		StdDraw.text(col+0.5, (this.numRows-1-row)+0.5, ""+ value);
@@ -109,28 +125,35 @@ public class DrawingBoard {
 		}
 	}
 	
+	private void drawPlayerScores(){
+		StdDraw.setFont(this.scoreFont);
+		StdDraw.setPenColor(StdDraw.ORANGE);
+		String p1Name = "" + this.state.getPlayer1().getPlayerID();
+		String p2Name = "" + this.state.getPlayer2().getPlayerID();
+		String p1Score = ""+ this.state.getPlayer1().getCurrentScore();
+		String p2Score = ""+ this.state.getPlayer2().getCurrentScore();
+		
+		StdDraw.text(1, 6.1, "Player1 [" + p1Name + "] : " + p1Score);
+		StdDraw.text(5, 6.1, "Player2 [" + p2Name + "] : " + p2Score);
+	}
 	
-	
-	private void drawCurrentBoardState(){
+	/**
+	 * will draw the current state of the game based off the 
+	 * drawing board's instance variable of game state. To draw an
+	 * updated picture of the game, set the game state instance 
+	 * variable every time the game state changes (using setGameStateNode())
+	 * before calling drawCurrentBoardState().
+	 */
+	public void drawCurrentBoardState(){
+		StdDraw.clear();
 		this.drawBlankGrid();
 		this.drawAllGridSpacePlayerColor();
 		this.drawGridAllGridValues();
+		this.drawPlayerScores();
 		StdDraw.show(5);
 	}
 
 	public static void main(String[] args) {
-		File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");
-		GameBoardFileReader fr = new GameBoardFileReader(gameBoardFile);
-		//System.out.println(fr.getNumGridRows() + ", " + fr.getNumGridRows());
-		BoardState bs = new BoardState(fr.getNumGridRows(), fr.getNumGridCols(), fr.getGridVals());
-		bs.printGridVals();
-		
-		Player p1 = new Player("player1", false, 0);
-		Player p2 = new Player("player2", false, 0);
-		GameStateNode state = new GameStateNode(p1, p2, bs);
-		
-		DrawingBoard db = new DrawingBoard(state);
-		db.drawInitialState();
 		
 	}
 

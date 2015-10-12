@@ -1,18 +1,24 @@
+/**
+ * BoardState: holds the state of the game board, most notably 
+ * the state of all grid spaces including their value and occupant
+ * @author dcyoung3
+ */
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class BoardState {
+	//a grid containing the state of all current grid spaces
 	private ArrayList<ArrayList<GridSpace>> grid;
 	private int numGridRows;
 	private int numGridCols;
 	
 	/**
-	 * 
+	 * Constructor
 	 * @param numGridRows
 	 * @param numGridCols
-	 * @param initialGridVals
+	 * @param initialGridVals - the numerical values associated with each grid space read from the input file for this gameboard
 	 */
 	public BoardState(int numGridRows, int numGridCols, ArrayList<ArrayList<Integer>> initialGridVals){
 		this.numGridRows = numGridRows;
@@ -28,6 +34,11 @@ public class BoardState {
 		
 	}
 	
+	/**
+	 * Populates the grid with new grid space objects and sets 
+	 * their initial state (value and no occupant)
+	 * @param initialGridVals
+	 */
 	public void initializeGrid(ArrayList<ArrayList<Integer>> initialGridVals){
 		
 		//initialize the grid of spaces with the initial grid values
@@ -41,6 +52,13 @@ public class BoardState {
 		this.postInitializeGrid();
 	}
 	
+	/**
+	 * handles initialization work that will be called both when
+	 * constructing a new board state and when deep copying a board state
+	 * specifically, determines all the neighboring grid spaces for each
+	 * grid space which must be instance specific (hence needs to be repeated
+	 * for the deepcopy)
+	 */
 	public void postInitializeGrid(){
 		//for each grid space, populate it's neighboring spaces array
 		for(ArrayList<GridSpace> row : this.grid){
@@ -50,6 +68,12 @@ public class BoardState {
 		}
 	}
 	
+	/**
+	 * Determines the neighbors that are adjacent to a gridspace
+	 * Only considers directly adjacent, not diagonal.
+	 * @param gridSpace
+	 * @return an array of grid spaces that are adjacent to the input gridspace
+	 */
 	public ArrayList<GridSpace> determineGridSpaceNeighbors(GridSpace gridSpace){
 		ArrayList<GridSpace> neighbors = new ArrayList<GridSpace>();
 		//add left, top, right, bottom
@@ -65,6 +89,9 @@ public class BoardState {
 		return neighbors;
 	}
 	
+	/**
+	 * simple print of the grid values for testing purposes
+	 */
 	public void printGridVals(){
 		for(ArrayList<GridSpace> row : this.grid){
 			for(GridSpace gs : row){
@@ -105,6 +132,11 @@ public class BoardState {
 		this.numGridCols = numGridCols;
 	}
 
+	/**
+	 * Deep copies the board state (clone) so that it can be
+	 * manipulated without altering the original.
+	 * @return a clone of boardstate
+	 */
 	public BoardState deepCopyBoardState(){
 		BoardState newBS = new BoardState();
 		newBS.setNumGridRows(this.numGridRows);
@@ -115,7 +147,10 @@ public class BoardState {
 		return newBS;
 	}
 	
-	
+	/**
+	 * Deep copies the grid, used when deep copying the board state
+	 * @return a clone of grid
+	 */
 	private ArrayList<ArrayList<GridSpace>> deepCopyGrid() {
 		ArrayList<ArrayList<GridSpace>> gridCopy = new ArrayList<ArrayList<GridSpace>>();
 		for(int row = 0; row < this.numGridRows; row++ ){
@@ -128,6 +163,10 @@ public class BoardState {
 		return gridCopy;
 	}
 
+	/**
+	 * 
+	 * @return true if every grid space on the grid is occupied
+	 */
 	public boolean isGridFilled() {
 		for(ArrayList<GridSpace> row : this.grid){
 			for(GridSpace gs : row){
@@ -139,34 +178,31 @@ public class BoardState {
 		return true;
 	}
 
-	public ArrayList<Move> getAllowableMoves(String playerID, GameStateNode n) {
+	/**
+	 * Given a player and a gamestate, determine what moves are permitable for that player 
+	 * @param playerID
+	 * @param state
+	 * @return an array of move objects that are permitable for the active player in the input state
+	 */
+	public ArrayList<Move> getAllowableMoves(String playerID, GameStateNode state) {
 		ArrayList<Move> allowableMoves = new ArrayList<Move>();
-		GameStateNode stateNodeClone;
-		GridSpace gridSpaceClone;
 		
 		//check every grid space to see if the player can move into it
 		for(int row = 0; row < this.numGridRows; row ++){
 			for(int col = 0; col < this.numGridCols; col ++){
-				GridSpace gs = this.grid.get(row).get(col);
+				GridSpace gridSpace = this.grid.get(row).get(col);
 				//if the grid space is unoccupied
-				if(!gs.isOccupied()){
-					//clone the game state so we don't mess with the current one
-					stateNodeClone = n.deepCopyGameStateNode();
-					gridSpaceClone = stateNodeClone.getBoardState().getGrid().get(row).get(col);
-					
+				if(!gridSpace.isOccupied()){
 					//add a new move of type CommandoParaDrop
-					allowableMoves.add(new CommandoParaDrop(playerID, gridSpaceClone, stateNodeClone));
+					allowableMoves.add(new CommandoParaDrop(playerID, gridSpace, state));
 					
 					//Check if a blitz is allowed
 					//if the grid space has a neighbor that belongs to the moving player
-					for(GridSpace neighbor : gs.getNeighboringGridSpaces()){
+					for(GridSpace neighbor : gridSpace.getNeighboringGridSpaces()){
 						if(neighbor.isOccupied()){
 							if(neighbor.getResidentPlayerID().equals(playerID)){
-								//clone the game state so we don't mess with the current one
-								stateNodeClone = n.deepCopyGameStateNode();
-								gridSpaceClone = stateNodeClone.getBoardState().getGrid().get(row).get(col);
 								//add a new move of type M1DeathBlitz
-								allowableMoves.add(new M1DeathBlitz(playerID, gridSpaceClone, stateNodeClone));
+								allowableMoves.add(new M1DeathBlitz(playerID, gridSpace, state));
 								break;
 							}
 						}
@@ -174,7 +210,6 @@ public class BoardState {
 				}
 			}
 		}
-		
 		return allowableMoves;
 	}
 	
