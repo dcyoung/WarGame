@@ -93,13 +93,14 @@ public class TestRunner {
 		int tempVal;
 		
 		for( GameStateNode child : children ){
-			AdversarialSearch mmSearch = new AdversarialSearch(child, 3);
+			AdversarialSearch mmSearch = new AdversarialSearch(child, 3, 3, true);
 			tempVal = mmSearch.conductSearch();
 			if(tempVal > bestValSoFar){
 				bestChoice = child;
 				bestValSoFar = tempVal;
 			}
 		}
+		System.out.println("expected utility: " + bestValSoFar);
 		return bestChoice;
 	}
 	
@@ -108,14 +109,21 @@ public class TestRunner {
 		DrawingBoard db = new DrawingBoard(state);
 		GameStateNode changingState = state;
 		int moveCount = 0;
+		long moveStartTime;
+		long moveDuration;
 		while(!changingState.isLeafNode()){
+			moveStartTime = System.currentTimeMillis();
 			//player1 moves on even count, player2 on odd
 			if( moveCount%2 == 0){
+				System.out.println("Move #" + (moveCount+1) + "\t\t [Player 1] :");
 				changingState = getPostSearchedMoveState(changingState, true);
 			}
 			else{
+				System.out.println("Move #" + (moveCount+1) + "\t\t [Player 2] :");
 				changingState = getPostSearchedMoveState(changingState, false);
 			}
+			moveDuration = System.currentTimeMillis() - moveStartTime;
+			System.out.println(moveDuration + "ms");
 			db.setGameStateNode(changingState);
 			db.drawCurrentBoardState();
 			moveCount++;
@@ -157,7 +165,11 @@ public class TestRunner {
 		
 		//tr.testBoardStateFromFile("./src/main/resources/game_boards/Smolensk.txt");
 		//tr.testRandomAdversaryMoves(tr.createTestGameState());
+		
+		long startTime = System.currentTimeMillis();
 		tr.testMiniMaxAdversaryMoves(tr.createTestGameState());
+		long duration = System.currentTimeMillis() - startTime;
+		System.out.println("Total game duration: " + duration );
 	}
 
 
