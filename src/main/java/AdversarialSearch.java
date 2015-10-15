@@ -150,10 +150,8 @@ public class AdversarialSearch {
 	 * @return
 	 */
 	public int evaluate(GameStateNode state){
-		int heuristicVal = 0;
 		int scoreDifference = state.getMaximizingPlayer().getCurrentScore() - state.getMinimizingPlayer().getCurrentScore();
 		return scoreDifference;
-		
 	}
 	
 	public void setMiniMaxDepthLimit(int depthLimit){
