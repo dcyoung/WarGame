@@ -93,7 +93,7 @@ public class TestRunner {
 		int tempVal;
 		
 		for( GameStateNode child : children ){
-			AdversarialSearch mmSearch = new AdversarialSearch(child, 3, 3, useAlphaBeta);
+			AdversarialSearch mmSearch = new AdversarialSearch(child, 3, 36, useAlphaBeta);
 			tempVal = mmSearch.conductSearch();
 			if(tempVal > bestValSoFar){
 				bestChoice = child;
@@ -160,6 +160,8 @@ public class TestRunner {
 	}
 	
 	
+	
+	
 	public static void main(String[] args) {
 		TestRunner tr = new TestRunner();
 		
@@ -167,14 +169,27 @@ public class TestRunner {
 		//tr.testRandomAdversaryMoves(tr.createTestGameState());
 		
 		long startTime = System.currentTimeMillis();
-		//test p1 = minimax, p2 = minimax
+		
+		/*TEST: 
+		 * p1 = minimax, 
+		 * p2 = minimax*/
 		//tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), false, false);
-		//test p1 = minimax, p2 = alpha beta
-		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), false, true);
-		//test p1 = alpha beta, p2 = minimax
+		
+		/*TEST: 
+		 * p1 = minimax, 
+		 * p2 = alpha beta*/
+		//tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), false, true);
+		
+		/*TEST: 
+		 * test p1 = alpha beta, 
+		 * p2 = minimax*/
 		//tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), true, false);
-		//test p1 = alpha beta, p2 = alpha beta
-		//tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), true, true);
+		
+		/*TEST: 
+		 * p1 = alpha beta, 
+		 * p2 = alpha beta*/
+		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), true, true);
+		
 		long duration = System.currentTimeMillis() - startTime;
 		System.out.println("Total game duration: " + duration );
 	}

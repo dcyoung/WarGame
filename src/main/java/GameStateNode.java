@@ -41,7 +41,11 @@ public class GameStateNode {
 	}
 	
 	/**
-	 * 
+	 * Gets all the possible child states of this node based off all allowable moves. THis
+	 * is not very space efficient at all, but is useful in normal minimax to write shorthand
+	 * when you know you won't be pruning any parts of the tree. But if you still care about
+	 * not storing all the child states at once... then try using getChildStateAfterMove instead
+	 * and simply iterate through the moves
 	 * @param activePlayer
 	 * @return array of subsequent states based of permittable moves from the current state
 	 */
@@ -126,6 +130,35 @@ public class GameStateNode {
 	public GameStateNode deepCopyGameStateNode(){
 		return new GameStateNode(this.player1.deepCopyPlayer(), this.player2.deepCopyPlayer(), this.boardState.deepCopyBoardState());
 	}
+	
+	
+	/**
+	 * Good alternative to getNodeChildren (which returns all children), this will simply
+	 * return 1 child based off a move. This is useful when doing alpha beta pruning and 
+	 * you prefer to iterate through the resulting states after a list of moves instead of
+	 * grabbing all the children at once. This is because the pruning could result in 
+	 * some children never being checked anyways.
+	 * @param activePlayer
+	 * @param move
+	 * @return
+	 */
+	public GameStateNode getChildStateAfterMove(Player activePlayer, Move move){
+		
+		if(move instanceof CommandoParaDrop){
+			CommandoParaDrop dropMove = (CommandoParaDrop) move;
+			return dropMove.makeMove();
+		}
+		else if(move instanceof M1DeathBlitz){
+			M1DeathBlitz blitzMove = (M1DeathBlitz) move;
+			return blitzMove.makeMove();
+		}
+		return null;
+	}
+	
+	
+	
+	
+	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

@@ -58,76 +58,111 @@ public class AdversarialSearch {
 	 */
 	public int minimax(GameStateNode state, int depthLimit, boolean bIsMaximizingPlayer){
 		if( state.isLeafNode() || depthLimit == 0 ){
-			return evaluate(state);
+			return evaluate(state, bIsMaximizingPlayer);
 		}
-		else if(bIsMaximizingPlayer){
-			//n is a max node
-			int bestValue = Integer.MIN_VALUE;
-			int value;
-			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
-				value = minimax(child, depthLimit-1, false);
-				bestValue = Math.max(bestValue, value);
+		else{
+			ArrayList<Move> allowAbleMoves = state.getAllowableMoves(state.getMaximizingPlayer());
+			GameStateNode child;
+			Move move;
+			int childMiniMaxValue;
+			if(bIsMaximizingPlayer){
+				//n is a max node
+				int miniMaxValue = Integer.MIN_VALUE;
+				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
+					move = allowAbleMoves.get(moveIndex);
+					child = state.getChildStateAfterMove(state.getMaximizingPlayer(), move);
+					childMiniMaxValue = minimax(child, depthLimit-1, false);
+					miniMaxValue = Math.max(miniMaxValue, childMiniMaxValue);
+				}
+				return miniMaxValue;
 			}
-			return bestValue;
-		}
-		else{ 
-			//n is a min node
-			int bestValue = Integer.MAX_VALUE;
-			int value;
-			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
-				value = minimax(child, depthLimit-1, true);
-				bestValue = Math.min(bestValue, value);
+			else{ 
+				//n is a min node
+				int miniMaxValue = Integer.MAX_VALUE;
+				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
+					move = allowAbleMoves.get(moveIndex);
+					child = state.getChildStateAfterMove(state.getMaximizingPlayer(), move);
+					childMiniMaxValue = minimax(child, depthLimit-1, true);
+					miniMaxValue = Math.min(miniMaxValue, childMiniMaxValue);
+				}
+				return miniMaxValue;
 			}
-			return bestValue;
 		}
 	}
 	
 	/**
-	 * Need to modify the behavior of game state node so that we don't actually 
-	 * determine all the children at once, but instead determine them one at a
-	 *  time and check for the alpha beta as we go along.
+	 * FIXME: 
 	 * @param state
 	 * @param depthLimit
-	 * @param min (alpha)
-	 * @param max (beta)
+	 * @param alpha 
+	 * @param beta 
 	 * @param bIsMaximizingPlayer
 	 * @return
 	 */
-	public int alphaBetaMinimax(GameStateNode state, int depthLimit, int min, int max, boolean bIsMaximizingPlayer){
+	public int alphaBetaMinimax(GameStateNode state, int depthLimit, int alpha, int beta, boolean bIsMaximizingPlayer){
 		if( state.isLeafNode() || depthLimit == 0 ){
-			return evaluate(state);
+			return evaluate(state, bIsMaximizingPlayer);
 		}
 		else if(bIsMaximizingPlayer){
 			//n is a max node
-			int bestValue = Integer.MIN_VALUE;
-			int value;
-			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
-				value = alphaBetaMinimax(child, depthLimit-1, bestValue, max, false);
-				bestValue = Math.max(bestValue, value);
-				
-				min = Math.max(min, bestValue);
-				//alpha break
-				if(max <= min){
+			int miniMaxValue = alpha;
+			int childValue;
+			
+			ArrayList<Move> allowableMoves = state.getAllowableMoves(state.getMaximizingPlayer());
+			GameStateNode childStateNode;
+			
+			for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+				childStateNode = state.getChildStateAfterMove(state.getMaximizingPlayer(), allowableMoves.get(moveIndex));
+				moveIndex++;
+				childValue = alphaBetaMinimax(childStateNode, depthLimit-1, miniMaxValue, beta, false);
+				miniMaxValue = Math.max(miniMaxValue, childValue);
+				alpha = Math.max(alpha, miniMaxValue);
+				if(beta >= alpha){
 					break;
 				}
 			}
-			return bestValue;
+//			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
+//				childValue = alphaBetaMinimax(child, depthLimit-1, miniMaxValue, beta, false);
+//				miniMaxValue = Math.max(miniMaxValue, childValue);
+//				
+//				alpha = Math.max(alpha, miniMaxValue);
+//				//alpha break
+//				if(beta <= alpha){
+//					break;
+//				}
+//			}
+			return miniMaxValue;
 		}
 		else{ 
 			//n is a min node
-			int bestValue = Integer.MAX_VALUE;
-			int value;
-			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
-				value = alphaBetaMinimax(child, depthLimit-1, min, bestValue, true);
-				bestValue = Math.min(bestValue, value);
-				max = Math.min(max,  bestValue);
-				
-				//beta break
-				if(max <= min){
+			int miniMaxValue = beta;
+			int childValue;
+			
+			ArrayList<Move> allowableMoves = state.getAllowableMoves(state.getMaximizingPlayer());
+			GameStateNode childStateNode;
+			for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+				childStateNode = state.getChildStateAfterMove(state.getMaximizingPlayer(), allowableMoves.get(moveIndex));
+				moveIndex++;
+				childValue = alphaBetaMinimax(childStateNode, depthLimit-1, alpha, miniMaxValue, true);
+				miniMaxValue = Math.min(miniMaxValue, childValue);
+				beta = Math.min(beta,  miniMaxValue);
+				if(beta >= alpha){
 					break;
 				}
 			}
-			return bestValue;
+			
+//			for(GameStateNode child : state.getNodeChildren(state.getMaximizingPlayer())){
+//				childValue = alphaBetaMinimax(child, depthLimit-1, alpha, miniMaxValue, true);
+//				miniMaxValue = Math.min(miniMaxValue, childValue);
+//				
+//				beta = Math.min(beta,  miniMaxValue);
+//				
+//				//beta break
+//				if(beta <= alpha){
+//					break;
+//				}
+//			}
+			return miniMaxValue;
 		}
 	}
 	
@@ -137,25 +172,20 @@ public class AdversarialSearch {
 	 * @param n
 	 * @return heuristic value of the node
 	 */
-	public int evaluate(GameStateNode state){
+	public int evaluate(GameStateNode state, boolean bIsMaximizingPlayer){
 		int heuristicVal = 0;
-		int scoreDifference = state.getPlayer1().getCurrentScore()-state.getPlayer2().getCurrentScore();;
-		if(state.getPlayer1().isMaximizingPlayer()){
-			heuristicVal += scoreDifference;
-		}
-		else{
-			heuristicVal += -scoreDifference;
-		}
+		int scoreDifference = state.getMaximizingPlayer().getCurrentScore() - state.getMinimizingPlayer().getCurrentScore();
+		return scoreDifference;
 		
-		if(state.isLeafNode()){
-			if(state.getLeadingPlayer().isMaximizingPlayer()){
-				heuristicVal += 36*99;
-			}
-			else{
-				heuristicVal += -36*99;
-			}
-		}
-		return heuristicVal;
+//		if(state.isLeafNode()){
+//			if(state.getLeadingPlayer().isMaximizingPlayer()){
+//				heuristicVal += 36*99;
+//			}
+//			else{
+//				heuristicVal += -36*99;
+//			}
+//		}
+//		return heuristicVal;
 	}
 	
 	public void setMiniMaxDepthLimit(int depthLimit){

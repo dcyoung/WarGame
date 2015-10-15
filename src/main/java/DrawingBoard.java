@@ -18,10 +18,12 @@ public class DrawingBoard {
 	private int numRows;
 	private int numCols;
 	private GameStateNode state;
-	private String bluePlayerID;
-	private String greenPlayerID;
+	private String player1ID;
+	private String player2ID;
 	private Font valueFont;
 	private Font scoreFont;
+	private Color player1Color = StdDraw.BLUE;
+	private Color player2Color = StdDraw.GREEN;
 	
 	/**
 	 * constructor
@@ -31,8 +33,8 @@ public class DrawingBoard {
 		this.state = state;
 		this.numRows = state.getBoardState().getNumGridRows();
 		this.numCols = state.getBoardState().getNumGridCols();
-		this.bluePlayerID = state.getPlayer1().getPlayerID();
-		this.greenPlayerID = state.getPlayer2().getPlayerID();
+		this.player1ID = state.getPlayer1().getPlayerID();
+		this.player2ID = state.getPlayer2().getPlayerID();
 		createCanvas();
 		
 		int style = Font.BOLD | Font.ITALIC;
@@ -108,11 +110,11 @@ public class DrawingBoard {
 			return;
 		}
 		else{
-			if(gs.getResidentPlayerID().equals(this.bluePlayerID)){
-				drawColoredCircle(row, col, StdDraw.BLUE);
+			if(gs.getResidentPlayerID().equals(this.player1ID)){
+				drawColoredCircle(row, col, this.player1Color);
 			}
 			else{
-				drawColoredCircle(row, col, StdDraw.GREEN);
+				drawColoredCircle(row, col, this.player2Color);
 			}
 		}
 	}
