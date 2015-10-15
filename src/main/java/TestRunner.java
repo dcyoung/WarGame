@@ -19,6 +19,10 @@ public class TestRunner {
 		
 	}
 	
+	/**
+	 * 
+	 * @param filename
+	 */
 	public void testBoardStateFromFile(String filename){
 		File gameBoardFile = new File(filename);
 		GameBoardFileReader fr = new GameBoardFileReader(gameBoardFile);
@@ -26,7 +30,12 @@ public class TestRunner {
 		bs.printGridVals();
 	}
 	
-	
+	/**
+	 * 
+	 * @param state
+	 * @param player1Move
+	 * @return
+	 */
 	public GameStateNode getPostRandomMoveState(GameStateNode state, boolean player1Move){
 		ArrayList<Move> allowableMoves;
 		if(player1Move){
@@ -54,6 +63,10 @@ public class TestRunner {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @param state
+	 */
 	public void testRandomAdversaryMoves(GameStateNode state){
 		DrawingBoard db = new DrawingBoard(state);
 		GameStateNode changingState = state;
@@ -74,6 +87,13 @@ public class TestRunner {
 		this.printGameResults(changingState);
 	}
 	
+	/**
+	 * 
+	 * @param state
+	 * @param player1Move
+	 * @param useAlphaBeta
+	 * @return
+	 */
 	private GameStateNode getPostSearchedMoveState(GameStateNode state, boolean player1Move, boolean useAlphaBeta) {
 		Player maximizingPlayer;
 		if(player1Move){
@@ -104,7 +124,12 @@ public class TestRunner {
 		return bestChoice;
 	}
 	
-	
+	/**
+	 * 
+	 * @param state
+	 * @param p1UseAlphaBeta
+	 * @param p2UseAlphaBeta
+	 */
 	public void testMiniMaxAdversaryMoves(GameStateNode state, boolean p1UseAlphaBeta, boolean p2UseAlphaBeta){
 		DrawingBoard db = new DrawingBoard(state);
 		GameStateNode changingState = state;
@@ -161,7 +186,10 @@ public class TestRunner {
 	
 	
 	
-	
+	/**
+	 * Main, used to run the tests easily in eclipse. 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		TestRunner tr = new TestRunner();
 		
