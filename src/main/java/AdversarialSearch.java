@@ -1,19 +1,21 @@
 /**
  * AdversarialSearch:
  * 		Conducts a minimax or enhanced minimax (alpha + beta pruning)
- * 		on a game state.
- * 		
- * 		Big idea is to evaluate the utility of the leaf nodes such that
- * 		each node in the tree can be assigned a worth value to the maximizing
- * 		agent (AI player). 
+ * 		on a game state. In practice, this class will be used to 
+ * 		evaluate the outcome of different moves for a player, to help 
+ * 		them decide which to select.
+ * 
  * 	Minimax: 
- * 		Takes a root node and moves down the tree until it reaches leaf
- * 		nodes or the maximum permitted depth (for performance reasons).
- * 		When it reaches such a stopping condition, it returns the heuristic
- * 		value associated with that node and then considers all these leaf 
- * 		values as the recursion closes back down such that only the choices
- * 		maximizing utility in the end (or at least by the max searchable depth)
- * 		will be selected. 
+ *		The minimax algorithm is a way of finding an optimal move in a 
+ *		two player game. The big idea is to evaluate the utility of the 
+ *		leaf nodes such that each node in the tree can be assigned a 
+ *		worth value to the maximizing agent (AI player). 
+ *
+ *	Alpha Beta Pruning:
+ *		Alpha-beta pruning is a way of finding the optimal minimax solution while 
+ *		avoiding searching subtrees of moves which won't be selected. It accomplishes 
+ *		the same task as normal minimax, but reduces the size of the search space 
+ *		by pruning the tree. 
  * 
  * @author dcyoung3
  */
@@ -44,34 +46,61 @@ public class AdversarialSearch {
 	 */
 	public int conductSearch(){
 		if(this.bUseAlphaBeta){
-			return alphaBetaMinimax(this.root, this.alphaBetaDepthLimit, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+			return alphaBeta(this.root, this.alphaBetaDepthLimit, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
 		}
 		return minimax(this.root, this.miniMaxDepthLimit, true);
 	}
 	
 	/**
-	 * 
-	 * @param state
+	 * minimax:
+	 * 		The minimax algorithm is a way of finding an optimal move in a 
+	 *		two player game. 
+	 *
+	 *		Each layer of the tree alternates as a MAX or MIN node.
+	 *		The goal at a MAX node is to maximize the value of the subtree rooted 
+	 *		at that node. To do this, a MAX node chooses the child with the greatest 
+	 *		value, and that becomes the value of the MAX node. Similarly, a MIN
+	 *		node tries to minimize the value of the subtree rooted at that node,
+	 *		and will choose the child with the lowest value, and that becomes
+	 *		the value of the MIN node.
+	 *
+	 * 		The  minimax algorithm takes a root node and moves down the tree 
+	 * 		until it reaches leaf nodes (or the maximum permitted depth, 
+	 * 		for performance reasons). When it reaches such a stopping condition, 
+	 * 		it returns a heuristic value that measures or estimates the utility 
+	 * 		of the root node to the max player.
+	 * 		 
+	 * @param root
 	 * @param depthLimit
-	 * @param bIsMaximizingPlayer
-	 * @return 
+	 * @param bIsMaxNode
+	 * @return a measure or estimate of the utility of the root node to the max player, 
+	 * 			assuming the opponent plays optimally
 	 */
-	public int minimax(GameStateNode state, int depthLimit, boolean bIsMaximizingPlayer){
-		if( state.isLeafNode() || depthLimit == 0 ){
-			return evaluate(state);
+	public int minimax(GameStateNode root, int depthLimit, boolean bIsMaxNode){
+		//if the node is a leaf node report its utility,
+		if( root.isLeafNode() || depthLimit == 0 ){
+			//treat deep enough nodes as leaf nodes (this will be a utility estimate though) 
+			return evaluate(root);
 		}
 		else{
-			ArrayList<Move> allowAbleMoves = state.getAllowableMoves(state.getMaximizingPlayer());
-			GameStateNode child;
+			ArrayList<Move> allowAbleMoves;
 			Move move;
+			GameStateNode child;
 			int childMiniMaxValue;
-			if(bIsMaximizingPlayer){
+			
+			if(bIsMaxNode){
 				//n is a max node
 				int miniMaxValue = Integer.MIN_VALUE;
+				
+				//get the allowable moves for the current state
+				allowAbleMoves = root.getAllowableMoves(root.getMaximizingPlayer());
+				//consider every child state resulting from one of the allowable moves
 				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
 					move = allowAbleMoves.get(moveIndex);
-					child = state.getChildStateAfterMove(state.getMaximizingPlayer(), move);
+					child = root.getChildStateAfterMove(root.getMaximizingPlayer(), move);
+					//evaluate the child
 					childMiniMaxValue = minimax(child, depthLimit-1, false);
+					//n is a max node, its minimax value will be the max of all its children
 					miniMaxValue = Math.max(miniMaxValue, childMiniMaxValue);
 				}
 				return miniMaxValue;
@@ -79,10 +108,15 @@ public class AdversarialSearch {
 			else{ 
 				//n is a min node
 				int miniMaxValue = Integer.MAX_VALUE;
+				//get the allowable moves for the current state
+				allowAbleMoves = root.getAllowableMoves(root.getMinimizingPlayer());
+				//consider every child state resulting from one of the allowable moves
 				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
 					move = allowAbleMoves.get(moveIndex);
-					child = state.getChildStateAfterMove(state.getMaximizingPlayer(), move);
+					child = root.getChildStateAfterMove(root.getMinimizingPlayer(), move);
+					//evaluate the child
 					childMiniMaxValue = minimax(child, depthLimit-1, true);
+					//n is a min node, its minimax value will be the min of all its children
 					miniMaxValue = Math.min(miniMaxValue, childMiniMaxValue);
 				}
 				return miniMaxValue;
@@ -91,61 +125,104 @@ public class AdversarialSearch {
 	}
 	
 	/**
-	 * FIXME: 
-	 * @param state
+	 *	alphaBetaMinimax:
+	 *		Alpha-beta pruning is a way of finding the optimal minimax solution while 
+	 *		avoiding searching subtrees of moves which won't be selected. It accomplishes 
+	 *		the same task as normal minimax, but reduces the size of the search space 
+	 *		by pruning the tree. 
+	 *
+	 * 		Alpha-beta pruning uses two bounds that are passed around in the algorithm.
+	 *		The bounds restrict the set of possible solutions based on the portion of 
+	 *		the search tree that has already been seen.
+	 *			alpha 	=  	maximum lower bound of possible solutions
+	 *			beta 	= 	minimum upper bound of possible solutions
+	 *		Therefore, for any node state to be considered as part of the path to a soln,
+	 *		the current estimate value for that node must fall inside the range bounded
+	 *		by alpha and beta. ie: alpha <= estimate value <= beta
+	 *
+	 *		As the algorithm runs, restrictions on the range of possible solutions are updated
+	 *		based on min nodes (which may place an upper bound) and max nodes (which may place 
+	 *		a lower bound). Moving through the tree, these bounds typically get closer together
+	 *		and eventually cross, such that beta < alpha. If such a crossing occurs, the range
+	 *		for the node's value becomes nonexistent because there is no overlapping region 
+	 *		between alpha and beta. In this circumstance, the node could never belong in a 
+	 *		solution path, so the algorithm stops processing the node meaning it stops
+	 *		generating its children and moves back to the parent node. The algorithm must
+	 *		still note the value of this node however... so it passes (to the parent) 
+	 *		the value that was changed which caused the crossing of alpha and beta.
+	 *
+	 * @param root
 	 * @param depthLimit
 	 * @param alpha 
 	 * @param beta 
-	 * @param bIsMaximizingPlayer
-	 * @return
+	 * @param bIsMaxNode
+	 * @return a measure or estimate of the utility of the root node to the max player, 
+	 * 			assuming the opponent plays optimally
 	 */
-	public int alphaBetaMinimax(GameStateNode state, int depthLimit, int alpha, int beta, boolean bIsMaximizingPlayer){
-		if( state.isLeafNode() || depthLimit == 0 ){
-			return evaluate(state);
+	public int alphaBeta(GameStateNode root, int depthLimit, int alpha, int beta, boolean bIsMaxNode){
+		if( root.isLeafNode() || depthLimit == 0 ){
+			return evaluate(root);
 		}
-		else if(bIsMaximizingPlayer){
-			//n is a max node
-			int miniMaxValue = alpha;
-			int childValue;
+		else{
 			
-			ArrayList<Move> allowableMoves = state.getAllowableMoves(state.getMaximizingPlayer());
+			//get all the allowable moves for this state
+			ArrayList<Move> allowableMoves;
 			GameStateNode childStateNode;
 			
-			for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
-				childStateNode = state.getChildStateAfterMove(state.getMaximizingPlayer(), allowableMoves.get(moveIndex));
-				moveIndex++;
-				childValue = alphaBetaMinimax(childStateNode, depthLimit-1, miniMaxValue, beta, false);
-				miniMaxValue = Math.max(miniMaxValue, childValue);
-				alpha = Math.max(alpha, miniMaxValue);
-				if(beta >= alpha){
-					break;
+			if(bIsMaxNode){
+				//get the allowable moves for the current state
+				allowableMoves = root.getAllowableMoves(root.getMaximizingPlayer());
+				//n is a max node
+				int miniMaxValue = alpha;
+				int childValue;
+				
+				//consider every child state resulting from an allowable move
+				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+					childStateNode = root.getChildStateAfterMove(root.getMaximizingPlayer(), allowableMoves.get(moveIndex));
+					moveIndex++;
+					//evaluate the child state
+					childValue = alphaBeta(childStateNode, depthLimit-1, miniMaxValue, beta, false);
+					//n is a max node, its minimax value will be the max of its children
+					miniMaxValue = Math.max(miniMaxValue, childValue);
+					
+					//update alpha and check if alpha and beta crossed
+					alpha = Math.max(alpha, miniMaxValue);
+					if(beta < alpha){
+						//break;
+						return alpha;
+					}
 				}
+				return miniMaxValue;
 			}
-			return miniMaxValue;
-		}
-		else{ 
-			//n is a min node
-			int miniMaxValue = beta;
-			int childValue;
-			
-			ArrayList<Move> allowableMoves = state.getAllowableMoves(state.getMaximizingPlayer());
-			GameStateNode childStateNode;
-			for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
-				childStateNode = state.getChildStateAfterMove(state.getMaximizingPlayer(), allowableMoves.get(moveIndex));
-				moveIndex++;
-				childValue = alphaBetaMinimax(childStateNode, depthLimit-1, alpha, miniMaxValue, true);
-				miniMaxValue = Math.min(miniMaxValue, childValue);
-				beta = Math.min(beta,  miniMaxValue);
-				if(beta >= alpha){
-					break;
+			else{ 
+				allowableMoves = root.getAllowableMoves(root.getMinimizingPlayer());
+				//n is a min node
+				int miniMaxValue = beta;
+				int childValue;
+				
+				//consider every child state resulting from an allowable move
+				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+					childStateNode = root.getChildStateAfterMove(root.getMinimizingPlayer(), allowableMoves.get(moveIndex));
+					moveIndex++;
+					//evaluate the child state
+					childValue = alphaBeta(childStateNode, depthLimit-1, alpha, miniMaxValue, true);
+					miniMaxValue = Math.min(miniMaxValue, childValue);
+					beta = Math.min(beta,  miniMaxValue);
+					if(beta < alpha){
+						return beta;
+						//break;
+					}
 				}
+				return miniMaxValue;
 			}
-			return miniMaxValue;
 		}
 	}
 	
 	/**
-	 * 
+	 * need to scale this somehow by the possibility of being blitzed... 
+	 * should add a check for blitzable neighbors and tally the potential score
+	 * to be stolen, weighting the score difference by the proportion that could
+	 * be stolen maybe???
 	 * @param state
 	 * @return
 	 */

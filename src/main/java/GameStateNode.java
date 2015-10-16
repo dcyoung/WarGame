@@ -41,7 +41,7 @@ public class GameStateNode {
 	}
 	
 	/**
-	 * Gets all the possible child states of this node based off all allowable moves. THis
+	 * Gets all the possible child states of this node based off all allowable moves. This
 	 * is not very space efficient at all, but is useful in normal minimax to write shorthand
 	 * when you know you won't be pruning any parts of the tree. But if you still care about
 	 * not storing all the child states at once... then try using getChildStateAfterMove instead
@@ -134,10 +134,11 @@ public class GameStateNode {
 	
 	/**
 	 * Good alternative to getNodeChildren (which returns all children), this will simply
-	 * return 1 child based off a move. This is useful when doing alpha beta pruning and 
+	 * return 1 child based off a move. This is useful when searching a tree and 
 	 * you prefer to iterate through the resulting states after a list of moves instead of
-	 * grabbing all the children at once. This is because the pruning could result in 
-	 * some children never being checked anyways.
+	 * grabbing all the children at once. This can save space by only holding one child at 
+	 * a time, and save time by not retrieving children that wont be evaluated in A-B pruning 
+	 * anyways.
 	 * @param activePlayer
 	 * @param move
 	 * @return
