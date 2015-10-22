@@ -7,10 +7,25 @@
  * @author dcyoung3
  */
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class TestRunner {
+
+	private String puzzleName;
+	private String folderName;
+	private PrintWriter durationWriterP1;
+	private PrintWriter durationWriterP2;
+	private PrintWriter expandedNodesWriterP1;
+	private PrintWriter expandedNodesWriterP2;
+	private PrintWriter summaryWriter;
+	
+
 
 	/**
 	 * Constructor
@@ -39,7 +54,7 @@ public class TestRunner {
 	 * @param abDepth
 	 * @return
 	 */
-	private GameStateNode getPostSearchedMoveState(GameStateNode state, boolean player1Move, boolean useAlphaBeta,int mmDepth, int abDepth) {
+	private GameStateNode getPostSearchedMoveState(GameStateNode state, boolean player1Move, boolean useAlphaBeta,int mmDepth, int abDepth){
 		Player maximizingPlayer;
 		if(player1Move){
 			maximizingPlayer = state.getPlayer1();
@@ -57,15 +72,23 @@ public class TestRunner {
 		int bestValSoFar = Integer.MIN_VALUE;
 		int tempVal;
 		
+		int moveExpandedNodes = 0;
 		for( GameStateNode child : children ){
 			AdversarialSearch mmSearch = new AdversarialSearch(child, mmDepth, abDepth, useAlphaBeta);
 			tempVal = mmSearch.conductSearch();
+			moveExpandedNodes += mmSearch.getNumExpandedNodes();
 			if(tempVal > bestValSoFar){
 				bestChoice = child;
 				bestValSoFar = tempVal;
 			}
 		}
-		//System.out.println("expected utility: " + bestValSoFar);
+		
+		if(player1Move){
+			this.expandedNodesWriterP1.println(moveExpandedNodes);
+		}
+		else{
+			this.expandedNodesWriterP2.println(moveExpandedNodes);
+		}
 		return bestChoice;
 	}
 	
@@ -78,44 +101,76 @@ public class TestRunner {
 	 * @param abDepth
 	 * @param sleepDuration
 	 */
-	public void testMiniMaxAdversaryMoves(GameStateNode state, boolean p1UseAlphaBeta, boolean p2UseAlphaBeta, int mmDepth, int abDepth, int sleepDuration){
+	public void testMiniMaxAdversaryMoves(GameStateNode state, boolean p1UseAlphaBeta, boolean p2UseAlphaBeta, int mmDepth, int abDepth, int sleepDuration) {
+		this.folderName = "./src/main/resources/savedGameplay/" + this.puzzleName + "/";
+		if(p1UseAlphaBeta){this.folderName += "ABvs";}else{this.folderName += "MMvs";}
+		if(p2UseAlphaBeta){this.folderName += "AB/";}else{this.folderName += "MM/";}
+		try {
+			this.durationWriterP1 = new PrintWriter(this.folderName + "move_durations_p1.txt", "UTF-8");
+			this.durationWriterP2 = new PrintWriter(this.folderName + "move_durations_p2.txt", "UTF-8");
+			this.expandedNodesWriterP1 = new PrintWriter(this.folderName + "move_expanded_nodes_p1.txt", "UTF-8");
+			this.expandedNodesWriterP2 = new PrintWriter(this.folderName + "move_expanded_nodes_p2.txt", "UTF-8");
+			this.summaryWriter = new PrintWriter(this.folderName + "summary.txt", "UTF-8");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		long startTime = System.currentTimeMillis();
+		
+		
+		
+		System.out.println("-----------------------------------New Game---------------------------------------\n\n");
 		DrawingBoard db = new DrawingBoard(state);
 		GameStateNode changingState = state;
 		int moveCount = 0;
 		long moveStartTime;
 		long moveDuration;
+		
 		while(!changingState.isLeafNode()){
 			moveStartTime = System.currentTimeMillis();
 			//player1 moves on even count, player2 on odd
 			if( moveCount%2 == 0){
-				//System.out.println("Move #" + (moveCount+1) + "\t\t [Player 1] :");
+				//System.out.println("Begin Move #" + (moveCount+1) + "\t\t [Player 1] :");
 				changingState = getPostSearchedMoveState(changingState, true, p1UseAlphaBeta, mmDepth, abDepth);
+				moveDuration = System.currentTimeMillis() - moveStartTime;
+				this.durationWriterP1.println(moveDuration);
 			}
 			else{
-				//System.out.println("Move #" + (moveCount+1) + "\t\t [Player 2] :");
+				//System.out.println("Begin Move #" + (moveCount+1) + "\t\t [Player 2] :");
 				changingState = getPostSearchedMoveState(changingState, false, p2UseAlphaBeta, mmDepth, abDepth);
+				moveDuration = System.currentTimeMillis() - moveStartTime;
+				this.durationWriterP2.println(moveDuration);
 			}
-			//moveDuration = System.currentTimeMillis() - moveStartTime;
 			//System.out.println(moveDuration + "ms");
+			
 			db.setGameStateNode(changingState);
 			db.drawCurrentBoardState();
+			db.saveImage(this.folderName + moveCount + ".png");
 			sleep(sleepDuration);
 			moveCount++;
 		}
 		System.out.println("\nA-B: [p1,p2] = [" + p1UseAlphaBeta + ", " + p2UseAlphaBeta + "],\tMM-Depth: " + mmDepth + "\tAB-Depth: " + abDepth );
-		this.printGameResults(changingState);
+		this.printGameResults(changingState, startTime);
+		
+		this.durationWriterP1.close();
+		this.durationWriterP2.close();
+		this.expandedNodesWriterP1.close();
+		this.expandedNodesWriterP2.close();
+		this.summaryWriter.close();
 	}
 	
 	
 			
 
-	private void printGameResults(GameStateNode state){
-		
-		
-		System.out.println("Results:");
-		System.out.println("Player ["+ state.getPlayer1().getPlayerID() + "],\tscore: " + state.getPlayer1().getCurrentScore() );
-		System.out.println("Player ["+ state.getPlayer2().getPlayerID() + "],\tscore: " + state.getPlayer2().getCurrentScore() );
-		System.out.println("Winning Player: Player [" + state.getLeadingPlayer().getPlayerID() + "]" );
+	private void printGameResults(GameStateNode state, long startTime){
+		this.summaryWriter.println("Results:");
+		this.summaryWriter.println("Player ["+ state.getPlayer1().getPlayerID() + "],\tscore: " + state.getPlayer1().getCurrentScore() );
+		this.summaryWriter.println("Player ["+ state.getPlayer2().getPlayerID() + "],\tscore: " + state.getPlayer2().getCurrentScore() );
+		this.summaryWriter.println("Winning Player: Player [" + state.getLeadingPlayer().getPlayerID() + "]" );
+		this.summaryWriter.println("Total game duration: " + (System.currentTimeMillis() - startTime) );
 	}
 	
 	private void sleep(int duration){
@@ -126,10 +181,18 @@ public class TestRunner {
 		}
 	}
 	public GameStateNode createTestGameState(){
-		//File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");
 		//File gameBoardFile = new File("./src/main/resources/game_boards/easy.txt");
-		//File gameBoardFile = new File("./src/main/resources/game_boards/Narvik.txt");
+		//this.puzzleName = "easy";
 		File gameBoardFile = new File("./src/main/resources/game_boards/Keren.txt");
+		this.puzzleName = "Keren";
+		//File gameBoardFile = new File("./src/main/resources/game_boards/Narvik.txt");
+		//this.puzzleName = "Narvik";
+		//File gameBoardFile = new File("./src/main/resources/game_boards/Sevastopol.txt");
+		//this.puzzleName = "Sevastopol";
+		//File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");
+		//this.puzzleName = "Smolensk";
+		//File gameBoardFile = new File("./src/main/resources/game_boards/Westerplatte.txt");
+		//this.puzzleName = "Westerplatte";
 		
 		GameBoardFileReader fr = new GameBoardFileReader(gameBoardFile);
 		BoardState bs = new BoardState(fr.getNumGridRows(), fr.getNumGridCols(), fr.getGridVals());
@@ -146,41 +209,36 @@ public class TestRunner {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		
 		TestRunner tr = new TestRunner();
 		
 		int mmDepth = 3;
 		int abDepth = 4;
 		int viewMovePauseDuration = 0; //increase to watch each move
-		long startTime; 
 		
 		
 		/*TEST: 
 		 * p1 = minimax, 
 		 * p2 = minimax*/
-		startTime = System.currentTimeMillis();
 		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), false, false, mmDepth, abDepth, viewMovePauseDuration);
-		System.out.println("Total game duration: " + (System.currentTimeMillis() - startTime) );
+		
 		
 		/*TEST: 
 		 * p1 = minimax, 
 		 * p2 = alpha beta*/
-		startTime = System.currentTimeMillis();
 		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), false, true, mmDepth, abDepth, viewMovePauseDuration);
-		System.out.println("Total game duration: " + (System.currentTimeMillis() - startTime) );
+		
 		
 		/*TEST: 
 		 * test p1 = alpha beta, 
 		 * p2 = minimax*/
-		startTime = System.currentTimeMillis();
 		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), true, false, mmDepth, abDepth, viewMovePauseDuration);
-		System.out.println("Total game duration: " + (System.currentTimeMillis() - startTime) );
 		
 		/*TEST: 
 		 * p1 = alpha beta, 
 		 * p2 = alpha beta*/
-		startTime = System.currentTimeMillis();
 		tr.testMiniMaxAdversaryMoves(tr.createTestGameState(), true, true, mmDepth, abDepth, viewMovePauseDuration);
-		System.out.println("Total game duration: " + (System.currentTimeMillis() - startTime) );
 		
 	}
 

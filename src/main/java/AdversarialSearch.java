@@ -26,6 +26,7 @@ public class AdversarialSearch {
 	private int miniMaxDepthLimit;
 	private int alphaBetaDepthLimit;
 	private boolean bUseAlphaBeta;
+	private int numExpandedNodes;
 	
 	/**
 	 * Constructor
@@ -38,6 +39,7 @@ public class AdversarialSearch {
 		this.bUseAlphaBeta = useAlphaBetaPruning;
 		this.miniMaxDepthLimit = miniMaxDepthLimit;
 		this.alphaBetaDepthLimit = alphaBetaDepthLimit;
+		this.numExpandedNodes = 0;
 	}
 	
 	/**
@@ -45,10 +47,14 @@ public class AdversarialSearch {
 	 * @return
 	 */
 	public int conductSearch(){
+		this.numExpandedNodes = 0;
+		int result; 
 		if(this.bUseAlphaBeta){
-			return alphaBeta(this.root, this.alphaBetaDepthLimit, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+			result = alphaBeta(this.root, this.alphaBetaDepthLimit, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+		}else{
+			result = minimax(this.root, this.miniMaxDepthLimit, true); 
 		}
-		return minimax(this.root, this.miniMaxDepthLimit, true);
+		return result;
 	}
 	
 	/**
@@ -80,7 +86,7 @@ public class AdversarialSearch {
 		//if the node is a leaf node report its utility,
 		if( root.isLeafNode() || depthLimit == 0 ){
 			//treat deep enough nodes as leaf nodes (this will be a utility estimate though) 
-			return evaluate(root);
+			return evaluate(root, bIsMaxNode);
 		}
 		else{
 			ArrayList<Move> allowAbleMoves;
@@ -99,6 +105,7 @@ public class AdversarialSearch {
 					move = allowAbleMoves.get(moveIndex);
 					child = root.getChildStateAfterMove(root.getMaximizingPlayer(), move);
 					//evaluate the child
+					this.numExpandedNodes++;
 					childMiniMaxValue = minimax(child, depthLimit-1, false);
 					//n is a max node, its minimax value will be the max of all its children
 					miniMaxValue = Math.max(miniMaxValue, childMiniMaxValue);
@@ -115,6 +122,7 @@ public class AdversarialSearch {
 					move = allowAbleMoves.get(moveIndex);
 					child = root.getChildStateAfterMove(root.getMinimizingPlayer(), move);
 					//evaluate the child
+					this.numExpandedNodes++;
 					childMiniMaxValue = minimax(child, depthLimit-1, true);
 					//n is a min node, its minimax value will be the min of all its children
 					miniMaxValue = Math.min(miniMaxValue, childMiniMaxValue);
@@ -161,7 +169,7 @@ public class AdversarialSearch {
 	 */
 	public int alphaBeta(GameStateNode root, int depthLimit, int alpha, int beta, boolean bIsMaxNode){
 		if( root.isLeafNode() || depthLimit == 0 ){
-			return evaluate(root);
+			return evaluate(root, bIsMaxNode);
 		}
 		else{
 			
@@ -179,8 +187,8 @@ public class AdversarialSearch {
 				//consider every child state resulting from an allowable move
 				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
 					childStateNode = root.getChildStateAfterMove(root.getMaximizingPlayer(), allowableMoves.get(moveIndex));
-					moveIndex++;
 					//evaluate the child state
+					this.numExpandedNodes++;
 					childValue = alphaBeta(childStateNode, depthLimit-1, miniMaxValue, beta, false);
 					//n is a max node, its minimax value will be the max of its children
 					miniMaxValue = Math.max(miniMaxValue, childValue);
@@ -203,8 +211,8 @@ public class AdversarialSearch {
 				//consider every child state resulting from an allowable move
 				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
 					childStateNode = root.getChildStateAfterMove(root.getMinimizingPlayer(), allowableMoves.get(moveIndex));
-					moveIndex++;
 					//evaluate the child state
+					this.numExpandedNodes++;
 					childValue = alphaBeta(childStateNode, depthLimit-1, alpha, miniMaxValue, true);
 					miniMaxValue = Math.min(miniMaxValue, childValue);
 					beta = Math.min(beta,  miniMaxValue);
@@ -226,9 +234,91 @@ public class AdversarialSearch {
 	 * @param state
 	 * @return
 	 */
-	public int evaluate(GameStateNode state){
-		int scoreDifference = state.getMaximizingPlayer().getCurrentScore() - state.getMinimizingPlayer().getCurrentScore();
-		return scoreDifference;
+	public int evaluate(GameStateNode state, boolean bIsMaxNode){
+		int maxPlyrScore = state.getMaximizingPlayer().getCurrentScore();
+		int minPlyrScore = state.getMinimizingPlayer().getCurrentScore();
+		
+		int heuristic;
+		int scoreDifference = maxPlyrScore - minPlyrScore;
+		
+		
+		//default heuristic
+		heuristic = scoreDifference;
+		return heuristic;
+		
+		
+		//new addition #1: Secured Portion Weighting
+		/*int portionSecuredForActivePlayer;
+		
+		if (bIsMaxNode) {
+			//it is the max player's turn... best case is positive score difference and large portion secured
+			if( maxPlyrScore > 0 ){
+				int maxPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMaximizingPlayer().getPlayerID());
+				portionSecuredForActivePlayer = 1 - ( maxPlyrVulnPoints / maxPlyrScore );
+			}
+			else{
+				portionSecuredForActivePlayer = 1;
+			}
+			if(scoreDifference > 0){
+				heuristic = scoreDifference * portionSecuredForActivePlayer;
+			}
+			else{
+				heuristic = scoreDifference * (1-portionSecuredForActivePlayer);
+			}
+		} else {
+			//it is the min player's turn... best case is negative score difference and large portion secured
+			if( minPlyrScore > 0 ){
+				int minPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMinimizingPlayer().getPlayerID());
+				portionSecuredForActivePlayer = 1 - ( minPlyrVulnPoints / minPlyrScore );
+			}
+			else{
+				portionSecuredForActivePlayer = 1;
+			}
+			if( scoreDifference > 0 ){
+				heuristic = scoreDifference * (1 - portionSecuredForActivePlayer);
+			}
+			else{
+				heuristic = scoreDifference * portionSecuredForActivePlayer;
+			}
+		}
+		return heuristic;
+		*/
+		
+		
+		//new addition #2:  score difference after subtracting the vulnerable points from active player's score
+/*		int securedScore;
+		if (bIsMaxNode) {
+			//it is the max player's turn... best case is positive score difference and large portion secured
+			int maxPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMaximizingPlayer().getPlayerID());
+			securedScore = maxPlyrScore - maxPlyrVulnPoints;
+			heuristic = securedScore - minPlyrScore;
+		} 
+		else {
+			//it is the min player's turn... best case is negative score difference and large portion secured
+			int minPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMinimizingPlayer().getPlayerID());
+			securedScore = minPlyrScore - minPlyrVulnPoints;
+			heuristic = maxPlyrScore - securedScore;
+		}
+		return heuristic;
+		*/
+		
+		
+		//new addition #3:  tiny weight given to vulnerable points
+	/*	int securedScore;
+		float weight = 0.1f;
+		if (bIsMaxNode) {
+			//it is the max player's turn... best case is positive score difference and large portion secured
+			int maxPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMaximizingPlayer().getPlayerID());
+			heuristic = maxPlyrScore - minPlyrScore - (int)(maxPlyrVulnPoints*weight);
+		} 
+		else {
+			//it is the min player's turn... best case is negative score difference and large portion secured
+			int minPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMinimizingPlayer().getPlayerID());
+			heuristic = maxPlyrScore - minPlyrScore + (int)(minPlyrVulnPoints*weight);
+		}
+		return heuristic;
+		*/
+		
 	}
 	
 	public void setMiniMaxDepthLimit(int depthLimit){
@@ -237,10 +327,17 @@ public class AdversarialSearch {
 	public void setAlphaBetaDepthLimit(int depthLimit){
 		this.alphaBetaDepthLimit = depthLimit;
 	}
+
+	public int getNumExpandedNodes() {
+		return numExpandedNodes;
+	}
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
 	}
+
+
+
 
 }

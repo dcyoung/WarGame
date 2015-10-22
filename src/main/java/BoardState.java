@@ -6,7 +6,9 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class BoardState {
 	//a grid containing the state of all current grid spaces
@@ -213,6 +215,53 @@ public class BoardState {
 		return allowableMoves;
 	}
 	
+	
+	
+	/**
+	 * Determines the number of points that are exposed to the opposing player if they use a blitz. Currently
+	 * considers all exposed points, not the max vulnerable to a single blitz.
+	 * @param playerID
+	 * @return
+	 */
+	public int getVulnerablePoints(String playerID) {
+		
+		//determine which spaces are currently occupied by the specified player
+		ArrayList<GridSpace> controlled = new ArrayList<GridSpace>();
+		for(int row = 0; row < this.numGridRows; row ++){
+			for(GridSpace gs : this.grid.get(row)){
+				if(gs.isOccupied() && gs.getResidentPlayerID().equals(playerID)){
+					controlled.add(gs);
+				}
+			}
+		}
+		
+		//determine which of those occupied spaces could be stolen on the nex turn
+		Set<GridSpace> vulnerableGridSpaces = new HashSet<GridSpace>();
+		for(GridSpace controlledSpace : controlled){
+			INNER:
+			for(GridSpace potentialEmptyNeighbor : controlledSpace.getNeighboringGridSpaces()){
+				if(!potentialEmptyNeighbor.isOccupied()){
+					for(GridSpace potentialOpponentSpace : potentialEmptyNeighbor.getNeighboringGridSpaces()){
+						if(potentialOpponentSpace.isOccupied() && !potentialOpponentSpace.getResidentPlayerID().equals(playerID)){
+							vulnerableGridSpaces.add(controlledSpace);
+							//This space just has to be determined vulnerable by any 1 neighbor, other neighbors don't need to be considered
+							break INNER; 
+						}
+					}
+				}
+			}
+		}
+		
+		//tally the potential loss
+		int vulnerablePoints = 0;
+		for(GridSpace gs : vulnerableGridSpaces){
+			vulnerablePoints += gs.getValue();
+		}
+		return vulnerablePoints;
+	}
+	
+	
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");
@@ -225,5 +274,6 @@ public class BoardState {
 //		BoardState newBS = bs.deepCopyBoardState();
 //		newBS.printGridVals();
 	}
+
 
 }

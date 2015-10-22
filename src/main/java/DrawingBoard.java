@@ -155,8 +155,14 @@ public class DrawingBoard {
 		StdDraw.show(5);
 	}
 
+	public void saveImage(String filename) {
+		StdDraw.save(filename);
+	}
+	
+	
 	public static void main(String[] args) {
 		
 	}
+
 
 }
