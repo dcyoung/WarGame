@@ -247,7 +247,7 @@ public class AdversarialSearch {
 		return heuristic;
 		
 		
-		//new addition #1: Secured Portion Weighting
+		//Custom Heuristic #1: Secured Portion Weighting
 		/*int portionSecuredForActivePlayer;
 		
 		if (bIsMaxNode) {
@@ -285,8 +285,9 @@ public class AdversarialSearch {
 		*/
 		
 		
-		//new addition #2:  score difference after subtracting the vulnerable points from active player's score
-/*		int securedScore;
+		//Custom Heuristic #2:  score difference after subtracting the vulnerable points from active player's score
+		/*
+		int securedScore;
 		if (bIsMaxNode) {
 			//it is the max player's turn... best case is positive score difference and large portion secured
 			int maxPlyrVulnPoints = state.getBoardState().getVulnerablePoints(state.getMaximizingPlayer().getPlayerID());
@@ -303,7 +304,7 @@ public class AdversarialSearch {
 		*/
 		
 		
-		//new addition #3:  tiny weight given to vulnerable points
+		//Custom Heuristic #3:  tiny weight given to vulnerable points
 	/*	int securedScore;
 		float weight = 0.1f;
 		if (bIsMaxNode) {

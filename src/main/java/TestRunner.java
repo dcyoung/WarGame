@@ -183,16 +183,16 @@ public class TestRunner {
 	public GameStateNode createTestGameState(){
 		//File gameBoardFile = new File("./src/main/resources/game_boards/easy.txt");
 		//this.puzzleName = "easy";
-		//File gameBoardFile = new File("./src/main/resources/game_boards/Keren.txt");
-		//this.puzzleName = "Keren";
+		File gameBoardFile = new File("./src/main/resources/game_boards/Keren.txt");
+		this.puzzleName = "Keren";
 		//File gameBoardFile = new File("./src/main/resources/game_boards/Narvik.txt");
 		//this.puzzleName = "Narvik";
 		//File gameBoardFile = new File("./src/main/resources/game_boards/Sevastopol.txt");
 		//this.puzzleName = "Sevastopol";
 		//File gameBoardFile = new File("./src/main/resources/game_boards/Smolensk.txt");
 		//this.puzzleName = "Smolensk";
-		File gameBoardFile = new File("./src/main/resources/game_boards/Westerplatte.txt");
-		this.puzzleName = "Westerplatte";
+		//File gameBoardFile = new File("./src/main/resources/game_boards/Westerplatte.txt");
+		//this.puzzleName = "Westerplatte";
 		
 		GameBoardFileReader fr = new GameBoardFileReader(gameBoardFile);
 		BoardState bs = new BoardState(fr.getNumGridRows(), fr.getNumGridCols(), fr.getGridVals());
