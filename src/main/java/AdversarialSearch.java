@@ -89,7 +89,7 @@ public class AdversarialSearch {
 			return evaluate(root, bIsMaxNode);
 		}
 		else{
-			ArrayList<Move> allowAbleMoves;
+			ArrayList<Move> allowableMoves;
 			Move move;
 			GameStateNode child;
 			int childMiniMaxValue;
@@ -99,10 +99,10 @@ public class AdversarialSearch {
 				int miniMaxValue = Integer.MIN_VALUE;
 				
 				//get the allowable moves for the current state
-				allowAbleMoves = root.getAllowableMoves(root.getMaximizingPlayer());
+				allowableMoves = root.getAllowableMoves(root.getMaximizingPlayer());
 				//consider every child state resulting from one of the allowable moves
-				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
-					move = allowAbleMoves.get(moveIndex);
+				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+					move = allowableMoves.get(moveIndex);
 					child = root.getChildStateAfterMove(root.getMaximizingPlayer(), move);
 					//evaluate the child
 					this.numExpandedNodes++;
@@ -115,11 +115,12 @@ public class AdversarialSearch {
 			else{ 
 				//n is a min node
 				int miniMaxValue = Integer.MAX_VALUE;
+				
 				//get the allowable moves for the current state
-				allowAbleMoves = root.getAllowableMoves(root.getMinimizingPlayer());
+				allowableMoves = root.getAllowableMoves(root.getMinimizingPlayer());
 				//consider every child state resulting from one of the allowable moves
-				for(int moveIndex = 0; moveIndex < allowAbleMoves.size(); moveIndex++){
-					move = allowAbleMoves.get(moveIndex);
+				for(int moveIndex = 0; moveIndex < allowableMoves.size(); moveIndex++){
+					move = allowableMoves.get(moveIndex);
 					child = root.getChildStateAfterMove(root.getMinimizingPlayer(), move);
 					//evaluate the child
 					this.numExpandedNodes++;

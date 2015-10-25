@@ -1,5 +1,5 @@
 Results:
-Player [player1],	score: 186
-Player [player2],	score: 192
-Winning Player: Player [player2]
-Total game duration: 41405
+Player [player1],	score: 261
+Player [player2],	score: 117
+Winning Player: Player [player1]
+Total game duration: 5597
